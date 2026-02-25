@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}AI Models{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-xl">AI Models</h1>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <form method="get" novalidate>
+      <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 2; min-width: 160px;">
+          <label class="govuk-label govuk-label--s" for="q">Search</label>
+          <input class="govuk-input" id="q" name="q" type="text" value="{{ q }}">
+        </div>
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+          <label class="govuk-label govuk-label--s" for="type">Model type</label>
+          <select class="govuk-select" id="type" name="type">
+            <option value="">All</option>
+            {% for value, label in type_choices %}
+            <option value="{{ value }}" {% if selected_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="govuk-button govuk-!-margin-bottom-0" type="submit">Filter</button>
+          {% if q or selected_type %}
+          <a href="{% url 'model-list' %}" class="govuk-link govuk-body">Clear</a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <p class="govuk-body govuk-!-colour-secondary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</p>
+
+    {% if models %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Developer</th>
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Context window</th>
+          <th class="govuk-table__header">Training cutoff</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for model in models %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'model-detail' model.pk %}" class="govuk-link">{{ model }}</a>
+          </td>
+          <td class="govuk-table__cell">{{ model.developer.name|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ model.get_model_type_display }}</td>
+          <td class="govuk-table__cell">{% if model.context_window_size %}{{ model.context_window_size|floatformat:"0" }} tokens{% else %}—{% endif %}</td>
+          <td class="govuk-table__cell">{{ model.training_cutoff_date|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="govuk-pagination" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+      <div class="govuk-pagination__prev">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_type %}type={{ selected_type }}&{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">
+          <span class="govuk-pagination__link-title">Previous</span>
+        </a>
+      </div>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <div class="govuk-pagination__next">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_type %}type={{ selected_type }}&{% endif %}page={{ page_obj.next_page_number }}" rel="next">
+          <span class="govuk-pagination__link-title">Next</span>
+        </a>
+      </div>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <p class="govuk-body">No models found matching your search.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

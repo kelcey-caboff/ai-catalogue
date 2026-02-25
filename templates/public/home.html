@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">AI Catalogue</h1>
+    <p class="govuk-body-l">A register of artificial intelligence tools, platforms, models, and use cases across the organisation.</p>
+    <p class="govuk-body">Use this catalogue to understand what AI is in use, where it is deployed, what models it runs on, and what assurance has been completed.</p>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-one-third">
+    <div class="govuk-panel govuk-panel--confirmation" style="background-color:#1d70b8; margin-bottom: 20px;">
+      <div class="govuk-panel__body">
+        <p class="govuk-body" style="color:#fff; margin-bottom: 5px;">Tools &amp; Platforms</p>
+        <span class="govuk-heading-xl" style="color:#fff; margin: 0;">{{ total_tools }}</span>
+      </div>
+    </div>
+    <a href="{% url 'tool-list' %}" class="govuk-link govuk-body">Browse all tools &rarr;</a>
+  </div>
+  <div class="govuk-grid-column-one-third">
+    <div class="govuk-panel govuk-panel--confirmation" style="background-color:#1d70b8; margin-bottom: 20px;">
+      <div class="govuk-panel__body">
+        <p class="govuk-body" style="color:#fff; margin-bottom: 5px;">AI Models</p>
+        <span class="govuk-heading-xl" style="color:#fff; margin: 0;">{{ total_models }}</span>
+      </div>
+    </div>
+    <a href="{% url 'model-list' %}" class="govuk-link govuk-body">Browse all models &rarr;</a>
+  </div>
+  <div class="govuk-grid-column-one-third">
+    <div class="govuk-panel govuk-panel--confirmation" style="background-color:#1d70b8; margin-bottom: 20px;">
+      <div class="govuk-panel__body">
+        <p class="govuk-body" style="color:#fff; margin-bottom: 5px;">Use Cases</p>
+        <span class="govuk-heading-xl" style="color:#fff; margin: 0;">{{ total_use_cases }}</span>
+      </div>
+    </div>
+    <a href="{% url 'usecase-list' %}" class="govuk-link govuk-body">Browse all use cases &rarr;</a>
+  </div>
+</div>
+
+<div class="govuk-grid-row" style="margin-top: 40px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Focused views</h2>
+  </div>
+  <div class="govuk-grid-column-one-half" style="margin-bottom: 20px;">
+    <h3 class="govuk-heading-s"><a href="{% url 'assured' %}" class="govuk-link govuk-link--no-visited-state">Assured tools</a></h3>
+    <p class="govuk-body">All approved tools with their assurance posture, responsible owners, and linked use cases at a glance.</p>
+  </div>
+  <div class="govuk-grid-column-one-half" style="margin-bottom: 20px;">
+    <h3 class="govuk-heading-s"><a href="{% url 'horizon' %}" class="govuk-link govuk-link--no-visited-state">Horizon / pipeline</a></h3>
+    <p class="govuk-body">Tools we know about but have not yet approved — a CRM-style view to track what is pending, under review, or suspended.</p>
+  </div>
+  <div class="govuk-grid-column-one-half" style="margin-bottom: 20px;">
+    <h3 class="govuk-heading-s"><a href="{% url 'by-department' %}" class="govuk-link govuk-link--no-visited-state">Use cases by department</a></h3>
+    <p class="govuk-body">All registered use cases grouped by the department that owns them.</p>
+  </div>
+  <div class="govuk-grid-column-one-half" style="margin-bottom: 20px;">
+    <h3 class="govuk-heading-s"><a href="{% url 'model-map' %}" class="govuk-link govuk-link--no-visited-state">AI model map</a></h3>
+    <p class="govuk-body">Which underlying AI models power which tools — useful for understanding model dependencies and concentration risk.</p>
+  </div>
+</div>
+
+{% if tools %}
+<div class="govuk-grid-row" style="margin-top: 10px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Approved tools</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Vendor</th>
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Deployment</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for tool in tools %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>
+          </td>
+          <td class="govuk-table__cell">{{ tool.vendor.name|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ tool.get_product_type_display|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ tool.get_deployment_type_display|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <a href="{% url 'tool-list' %}" class="govuk-link">View all tools &amp; platforms</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

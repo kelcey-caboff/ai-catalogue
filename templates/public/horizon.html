@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Horizon — Pipeline{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">Horizon &amp; pipeline</h1>
+    <p class="govuk-body-l">Tools and platforms we are aware of that are not yet approved for use. Use this view to track what is being evaluated, what might be raised with you, and what has previously been rejected.</p>
+  </div>
+</div>
+
+{% if under_review %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Under review <strong class="govuk-tag govuk-tag--yellow">{{ under_review.count }}</strong></h2>
+    <p class="govuk-body">Actively being assessed.</p>
+    {% include "public/_horizon_table.html" with tools=under_review %}
+  </div>
+</div>
+{% endif %}
+
+{% if pending %}
+<div class="govuk-grid-row" style="margin-top: 30px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Pending <strong class="govuk-tag govuk-tag--grey">{{ pending.count }}</strong></h2>
+    <p class="govuk-body">Known tools that have not yet entered formal review.</p>
+    {% include "public/_horizon_table.html" with tools=pending %}
+  </div>
+</div>
+{% endif %}
+
+{% if suspended %}
+<div class="govuk-grid-row" style="margin-top: 30px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Suspended <strong class="govuk-tag govuk-tag--orange">{{ suspended.count }}</strong></h2>
+    <p class="govuk-body">Previously approved tools that have been suspended pending further review.</p>
+    {% include "public/_horizon_table.html" with tools=suspended %}
+  </div>
+</div>
+{% endif %}
+
+{% if rejected %}
+<div class="govuk-grid-row" style="margin-top: 30px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-l">Rejected <strong class="govuk-tag govuk-tag--red">{{ rejected.count }}</strong></h2>
+    <p class="govuk-body">Tools that have been reviewed and not approved. Retained for reference.</p>
+    {% include "public/_horizon_table.html" with tools=rejected %}
+  </div>
+</div>
+{% endif %}
+
+{% if not under_review and not pending and not suspended and not rejected %}
+<p class="govuk-body">No tools in the pipeline.</p>
+{% endif %}
+{% endblock %}

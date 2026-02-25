@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Tools &amp; Platforms{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-xl">Tools &amp; Platforms</h1>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <form method="get" novalidate>
+      <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 2; min-width: 160px;">
+          <label class="govuk-label govuk-label--s" for="q">Search</label>
+          <input class="govuk-input" id="q" name="q" type="text" value="{{ q }}">
+        </div>
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+          <label class="govuk-label govuk-label--s" for="status">Status</label>
+          <select class="govuk-select" id="status" name="status">
+            <option value="">All</option>
+            {% for value, label in approval_choices %}
+            <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+          <label class="govuk-label govuk-label--s" for="deployment">Deployment</label>
+          <select class="govuk-select" id="deployment" name="deployment">
+            <option value="">All</option>
+            {% for value, label in deployment_choices %}
+            <option value="{{ value }}" {% if selected_deployment == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="govuk-button govuk-!-margin-bottom-0" type="submit">Filter</button>
+          {% if q or selected_status or selected_deployment %}
+          <a href="{% url 'tool-list' %}" class="govuk-link govuk-body">Clear</a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <p class="govuk-body govuk-!-colour-secondary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</p>
+
+    {% if tools %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Name</th>
+          <th class="govuk-table__header">Vendor</th>
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Deployment</th>
+          <th class="govuk-table__header">Status</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for tool in tools %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>
+          </td>
+          <td class="govuk-table__cell">{{ tool.vendor.name|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ tool.get_product_type_display|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ tool.get_deployment_type_display|default:"—" }}</td>
+          <td class="govuk-table__cell">
+            {% if tool.approval_status == "approved" %}
+              <strong class="govuk-tag govuk-tag--green">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "rejected" %}
+              <strong class="govuk-tag govuk-tag--red">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "suspended" %}
+              <strong class="govuk-tag govuk-tag--orange">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "under_review" %}
+              <strong class="govuk-tag govuk-tag--yellow">{{ tool.get_approval_status_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--grey">{{ tool.get_approval_status_display }}</strong>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="govuk-pagination" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+      <div class="govuk-pagination__prev">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_deployment %}deployment={{ selected_deployment }}&{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">
+          <svg class="govuk-pagination__icon govuk-pagination__icon--prev" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
+            <path d="m6.5938-0.0078125-6.7266 6.7189 6.7441 6.4062 1.377-1.449-4.1856-3.9768h12.896v-2h-12.984l4.2931-4.293-1.414-1.414z"/>
+          </svg>
+          <span class="govuk-pagination__link-title">Previous</span>
+        </a>
+      </div>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <div class="govuk-pagination__next">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_status %}status={{ selected_status }}&{% endif %}{% if selected_deployment %}deployment={{ selected_deployment }}&{% endif %}page={{ page_obj.next_page_number }}" rel="next">
+          <span class="govuk-pagination__link-title">Next</span>
+          <svg class="govuk-pagination__icon govuk-pagination__icon--next" xmlns="http://www.w3.org/2000/svg" height="13" width="15" focusable="false" aria-hidden="true" viewBox="0 0 15 13">
+            <path d="m8.107-0.0078125-1.4136 1.414 4.2926 4.293h-12.986v2h12.896l-4.1855 3.9766 1.377 1.4492 6.7441-6.4062-6.7246-6.7246z"/>
+          </svg>
+        </a>
+      </div>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <p class="govuk-body">No tools found matching your search.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

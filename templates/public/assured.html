@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Assured Tools{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">Assured tools &amp; platforms</h1>
+    <p class="govuk-body-l">Tools and platforms that have been reviewed and approved for use. Check assurance status before deploying a new use case.</p>
+  </div>
+</div>
+
+{% if tools %}
+{% for tool in tools %}
+<div class="govuk-summary-card" style="margin-bottom: 30px;">
+  <div class="govuk-summary-card__title-wrapper">
+    <h2 class="govuk-summary-card__title">
+      <a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>
+    </h2>
+    <strong class="govuk-tag govuk-tag--green">Approved</strong>
+  </div>
+  <div class="govuk-summary-card__content">
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Vendor</dt>
+        <dd class="govuk-summary-list__value">{{ tool.vendor.name|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Type</dt>
+        <dd class="govuk-summary-list__value">{{ tool.get_product_type_display|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Deployment</dt>
+        <dd class="govuk-summary-list__value">{{ tool.get_deployment_type_display|default:"—" }}</dd>
+      </div>
+      {% if tool.last_assessment_date %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Last assessed</dt>
+        <dd class="govuk-summary-list__value">{{ tool.last_assessment_date }}</dd>
+      </div>
+      {% endif %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Assurance</dt>
+        <dd class="govuk-summary-list__value">
+          {% if tool.attestations.all %}
+            {% for a in tool.attestations.all %}
+              {% if a.status == "completed" %}
+                <strong class="govuk-tag govuk-tag--green" style="margin-right: 4px;">{{ a.get_attestation_type_display }}</strong>
+              {% elif a.status == "expired" %}
+                <strong class="govuk-tag govuk-tag--red" style="margin-right: 4px;">{{ a.get_attestation_type_display }} expired</strong>
+              {% else %}
+                <strong class="govuk-tag govuk-tag--grey" style="margin-right: 4px;">{{ a.get_attestation_type_display }} pending</strong>
+              {% endif %}
+            {% endfor %}
+          {% else %}
+            <span class="govuk-body govuk-!-colour-secondary">No assurance records</span>
+          {% endif %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Senior Responsible Owner</dt>
+        <dd class="govuk-summary-list__value">
+          {% for role in tool.roles.all %}{% if role.role_type == "sro" %}{{ role.person_name }}{% if role.email %} &mdash; <a href="mailto:{{ role.email }}" class="govuk-link">{{ role.email }}</a>{% endif %}{% endif %}{% empty %}—{% endfor %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Active use cases</dt>
+        <dd class="govuk-summary-list__value">
+          {% if tool.use_cases.all %}
+            <ul class="govuk-list">
+              {% for uc in tool.use_cases.all %}
+              <li><a href="{% url 'usecase-detail' uc.pk %}" class="govuk-link">{{ uc.title }}</a>
+                {% if uc.owning_department %}<span class="govuk-body-s govuk-!-colour-secondary">({{ uc.owning_department.name }})</span>{% endif %}
+              </li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <span class="govuk-body govuk-!-colour-secondary">No use cases registered</span>
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+<p class="govuk-body">No approved tools in the catalogue yet.</p>
+{% endif %}
+{% endblock %}

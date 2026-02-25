@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}By Department{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">AI use cases by department</h1>
+    <p class="govuk-body-l">All registered use cases, grouped by the department that owns them.</p>
+  </div>
+</div>
+
+{% for dept in departments %}
+<div class="govuk-grid-row" style="margin-top: 20px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-m">
+      {{ dept.name }}
+      <span class="govuk-body govuk-!-colour-secondary">&nbsp;{{ dept.use_case_count }} use case{{ dept.use_case_count|pluralize }}</span>
+    </h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Use case</th>
+          <th class="govuk-table__header">Tool{{ "" }}</th>
+          <th class="govuk-table__header">Risk</th>
+          <th class="govuk-table__header">Autonomy</th>
+          <th class="govuk-table__header">Public facing</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for uc in dept.use_cases.all %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'usecase-detail' uc.pk %}" class="govuk-link">{{ uc.title }}</a>
+          </td>
+          <td class="govuk-table__cell">
+            {% for t in uc.tools.all %}<a href="{% url 'tool-detail' t.pk %}" class="govuk-link">{{ t.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+          </td>
+          <td class="govuk-table__cell">
+            {% if uc.risk_level == "critical" %}
+              <strong class="govuk-tag govuk-tag--red">{{ uc.get_risk_level_display }}</strong>
+            {% elif uc.risk_level == "high" %}
+              <strong class="govuk-tag govuk-tag--orange">{{ uc.get_risk_level_display }}</strong>
+            {% elif uc.risk_level == "medium" %}
+              <strong class="govuk-tag govuk-tag--yellow">{{ uc.get_risk_level_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--green">{{ uc.get_risk_level_display }}</strong>
+            {% endif %}
+          </td>
+          <td class="govuk-table__cell">{{ uc.get_autonomy_level_display }}</td>
+          <td class="govuk-table__cell">{% if uc.is_public_facing %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% empty %}
+<p class="govuk-body">No use cases with an owning department yet.</p>
+{% endfor %}
+
+{% if unowned %}
+<div class="govuk-grid-row" style="margin-top: 20px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-m">No department assigned <span class="govuk-body govuk-!-colour-secondary">&nbsp;{{ unowned.count }} use case{{ unowned.count|pluralize }}</span></h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Use case</th>
+          <th class="govuk-table__header">Tool</th>
+          <th class="govuk-table__header">Risk</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for uc in unowned %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell"><a href="{% url 'usecase-detail' uc.pk %}" class="govuk-link">{{ uc.title }}</a></td>
+          <td class="govuk-table__cell">
+            {% for t in uc.tools.all %}<a href="{% url 'tool-detail' t.pk %}" class="govuk-link">{{ t.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+          </td>
+          <td class="govuk-table__cell">{{ uc.get_risk_level_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Use Cases{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <h1 class="govuk-heading-xl">Use Cases</h1>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <form method="get" novalidate>
+      <div style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 2; min-width: 160px;">
+          <label class="govuk-label govuk-label--s" for="q">Search</label>
+          <input class="govuk-input" id="q" name="q" type="text" value="{{ q }}">
+        </div>
+        <div class="govuk-form-group" style="margin-bottom: 0; flex: 1; min-width: 140px;">
+          <label class="govuk-label govuk-label--s" for="risk">Risk level</label>
+          <select class="govuk-select" id="risk" name="risk">
+            <option value="">All</option>
+            {% for value, label in risk_choices %}
+            <option value="{{ value }}" {% if selected_risk == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <button class="govuk-button govuk-!-margin-bottom-0" type="submit">Filter</button>
+          {% if q or selected_risk %}
+          <a href="{% url 'usecase-list' %}" class="govuk-link govuk-body">Clear</a>
+          {% endif %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-full">
+    <p class="govuk-body govuk-!-colour-secondary">{{ page_obj.paginator.count }} result{{ page_obj.paginator.count|pluralize }}</p>
+
+    {% if use_cases %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Title</th>
+          <th class="govuk-table__header">Tool</th>
+          <th class="govuk-table__header">Department</th>
+          <th class="govuk-table__header">Risk</th>
+          <th class="govuk-table__header">Public facing</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for uc in use_cases %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'usecase-detail' uc.pk %}" class="govuk-link">{{ uc.title }}</a>
+          </td>
+          <td class="govuk-table__cell">
+            {% for t in uc.tools.all %}<a href="{% url 'tool-detail' t.pk %}" class="govuk-link">{{ t.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+          </td>
+          <td class="govuk-table__cell">{{ uc.owning_department.name|default:"—" }}</td>
+          <td class="govuk-table__cell">
+            {% if uc.risk_level == "critical" %}
+              <strong class="govuk-tag govuk-tag--red">{{ uc.get_risk_level_display }}</strong>
+            {% elif uc.risk_level == "high" %}
+              <strong class="govuk-tag govuk-tag--orange">{{ uc.get_risk_level_display }}</strong>
+            {% elif uc.risk_level == "medium" %}
+              <strong class="govuk-tag govuk-tag--yellow">{{ uc.get_risk_level_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--green">{{ uc.get_risk_level_display }}</strong>
+            {% endif %}
+          </td>
+          <td class="govuk-table__cell">{% if uc.is_public_facing %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="govuk-pagination" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+      <div class="govuk-pagination__prev">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_risk %}risk={{ selected_risk }}&{% endif %}page={{ page_obj.previous_page_number }}" rel="prev">
+          <span class="govuk-pagination__link-title">Previous</span>
+        </a>
+      </div>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <div class="govuk-pagination__next">
+        <a class="govuk-link govuk-pagination__link" href="?{% if q %}q={{ q }}&{% endif %}{% if selected_risk %}risk={{ selected_risk }}&{% endif %}page={{ page_obj.next_page_number }}" rel="next">
+          <span class="govuk-pagination__link-title">Next</span>
+        </a>
+      </div>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <p class="govuk-body">No use cases found matching your search.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+

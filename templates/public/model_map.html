@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Model Map{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-xl">AI model map</h1>
+    <p class="govuk-body-l">Which underlying AI models power which tools and platforms. Use this to understand model dependencies and concentration risk.</p>
+  </div>
+</div>
+
+{% for model in ai_models %}
+<div class="govuk-grid-row" style="margin-top: 20px;">
+  <div class="govuk-grid-column-full">
+    <h2 class="govuk-heading-m">
+      <a href="{% url 'model-detail' model.pk %}" class="govuk-link govuk-link--no-visited-state">{{ model.name }}{% if model.version %} <span class="govuk-body govuk-!-colour-secondary">({{ model.version }})</span>{% endif %}</a>
+      <span class="govuk-body govuk-!-colour-secondary">&nbsp;&mdash; {{ model.tool_count }} tool{{ model.tool_count|pluralize }}</span>
+    </h2>
+    <dl class="govuk-summary-list govuk-summary-list--no-border" style="margin-bottom: 10px;">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Developer</dt>
+        <dd class="govuk-summary-list__value">{{ model.developer.name }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Type</dt>
+        <dd class="govuk-summary-list__value">{{ model.get_model_type_display }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Explainability</dt>
+        <dd class="govuk-summary-list__value">{{ model.get_explainability_level_display }}</dd>
+      </div>
+    </dl>
+
+    {% if model.tools.all %}
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Tool / platform</th>
+          <th class="govuk-table__header">Vendor</th>
+          <th class="govuk-table__header">Status</th>
+          <th class="govuk-table__header">Deployment</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for tool in model.tools.all %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">
+            <a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>
+          </td>
+          <td class="govuk-table__cell">{{ tool.vendor.name|default:"—" }}</td>
+          <td class="govuk-table__cell">
+            {% if tool.approval_status == "approved" %}
+              <strong class="govuk-tag govuk-tag--green">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "under_review" %}
+              <strong class="govuk-tag govuk-tag--blue">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "pending" %}
+              <strong class="govuk-tag govuk-tag--yellow">{{ tool.get_approval_status_display }}</strong>
+            {% elif tool.approval_status == "rejected" %}
+              <strong class="govuk-tag govuk-tag--red">{{ tool.get_approval_status_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--grey">{{ tool.get_approval_status_display }}</strong>
+            {% endif %}
+          </td>
+          <td class="govuk-table__cell">{{ tool.get_deployment_type_display|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="govuk-body govuk-!-colour-secondary">No tools currently linked to this model.</p>
+    {% endif %}
+  </div>
+</div>
+{% empty %}
+<p class="govuk-body">No AI models registered yet.</p>
+{% endfor %}
+{% endblock %}

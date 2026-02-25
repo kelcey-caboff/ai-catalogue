@@ -1,0 +1,26 @@
+<table class="govuk-table">
+  <thead class="govuk-table__head">
+    <tr class="govuk-table__row">
+      <th class="govuk-table__header">Name</th>
+      <th class="govuk-table__header">Vendor</th>
+      <th class="govuk-table__header">Type</th>
+      <th class="govuk-table__header">SRO / Owner</th>
+      <th class="govuk-table__header">Use cases</th>
+    </tr>
+  </thead>
+  <tbody class="govuk-table__body">
+    {% for tool in tools %}
+    <tr class="govuk-table__row">
+      <td class="govuk-table__cell">
+        <a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>
+      </td>
+      <td class="govuk-table__cell">{{ tool.vendor.name|default:"—" }}</td>
+      <td class="govuk-table__cell">{{ tool.get_product_type_display|default:"—" }}</td>
+      <td class="govuk-table__cell">
+        {% for role in tool.roles.all %}{% if role.role_type == "sro" %}{{ role.person_name }}{% endif %}{% empty %}—{% endfor %}
+      </td>
+      <td class="govuk-table__cell">{{ tool.use_cases.count }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

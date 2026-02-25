@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}{{ use_case.title }}{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <a href="{% url 'usecase-list' %}" class="govuk-back-link">Back to use cases</a>
+    <h1 class="govuk-heading-xl">{{ use_case.title }}</h1>
+    {% if use_case.description %}
+    <p class="govuk-body-l">{{ use_case.description }}</p>
+    {% endif %}
+  </div>
+  {% if request.user.is_authenticated %}
+  <div class="govuk-grid-column-one-third" style="text-align: right; padding-top: 10px;">
+    <a href="/admin/catalogue/usecase/{{ use_case.pk }}/change/" class="govuk-link govuk-body-s">Edit in admin &rarr;</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h2 class="govuk-heading-m">Use case details</h2>
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Tool{{ use_case.tools.all|length|pluralize }} / Platform{{ use_case.tools.all|length|pluralize }}</dt>
+        <dd class="govuk-summary-list__value">
+          {% for t in use_case.tools.all %}<a href="{% url 'tool-detail' t.pk %}" class="govuk-link">{{ t.name }}</a>{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Owning department</dt>
+        <dd class="govuk-summary-list__value">{{ use_case.owning_department.name|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Risk level</dt>
+        <dd class="govuk-summary-list__value">
+          {% if use_case.risk_level == "critical" %}
+            <strong class="govuk-tag govuk-tag--red">{{ use_case.get_risk_level_display }}</strong>
+          {% elif use_case.risk_level == "high" %}
+            <strong class="govuk-tag govuk-tag--orange">{{ use_case.get_risk_level_display }}</strong>
+          {% elif use_case.risk_level == "medium" %}
+            <strong class="govuk-tag govuk-tag--yellow">{{ use_case.get_risk_level_display }}</strong>
+          {% else %}
+            <strong class="govuk-tag govuk-tag--green">{{ use_case.get_risk_level_display }}</strong>
+          {% endif %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Autonomy level</dt>
+        <dd class="govuk-summary-list__value">{{ use_case.get_autonomy_level_display }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Human in the loop</dt>
+        <dd class="govuk-summary-list__value">{% if use_case.human_in_loop %}Yes{% else %}No{% endif %}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Public facing</dt>
+        <dd class="govuk-summary-list__value">{% if use_case.is_public_facing %}Yes{% else %}No{% endif %}</dd>
+      </div>
+      {% if use_case.impacted_population %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Impacted population</dt>
+        <dd class="govuk-summary-list__value">{{ use_case.impacted_population }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+
+    {% if use_case.roles.all %}
+    <h2 class="govuk-heading-m">Responsible owners</h2>
+    <dl class="govuk-summary-list">
+      {% for role in use_case.roles.all %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">{{ role.get_role_type_display }}</dt>
+        <dd class="govuk-summary-list__value">
+          {{ role.person_name }}
+          {% if role.email %}&nbsp;<a href="mailto:{{ role.email }}" class="govuk-link">{{ role.email }}</a>{% endif %}
+        </dd>
+      </div>
+      {% endfor %}
+    </dl>
+    {% endif %}
+
+    {% if use_case.attestations.all %}
+    <h2 class="govuk-heading-m">Assurance</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Status</th>
+          <th class="govuk-table__header">Date</th>
+          <th class="govuk-table__header">Expires</th>
+          <th class="govuk-table__header">Evidence</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for a in use_case.attestations.all %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">{{ a.get_attestation_type_display }}</td>
+          <td class="govuk-table__cell">
+            {% if a.status == "completed" %}
+              <strong class="govuk-tag govuk-tag--green">{{ a.get_status_display }}</strong>
+            {% elif a.status == "expired" %}
+              <strong class="govuk-tag govuk-tag--red">{{ a.get_status_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--grey">{{ a.get_status_display }}</strong>
+            {% endif %}
+          </td>
+          <td class="govuk-table__cell">{{ a.attestation_date|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ a.expiry_date|default:"—" }}</td>
+          <td class="govuk-table__cell">
+            {% if a.evidence_url %}
+            <a href="{{ a.evidence_url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">View</a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

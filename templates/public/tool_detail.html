@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}{{ tool.name }}{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <a href="{% url 'tool-list' %}" class="govuk-back-link">Back to tools &amp; platforms</a>
+
+    <h1 class="govuk-heading-xl">
+      {{ tool.name }}
+      {% if tool.approval_status == "approved" %}
+        <strong class="govuk-tag govuk-tag--green" style="vertical-align: middle;">Approved</strong>
+      {% elif tool.approval_status == "rejected" %}
+        <strong class="govuk-tag govuk-tag--red" style="vertical-align: middle;">Rejected</strong>
+      {% elif tool.approval_status == "suspended" %}
+        <strong class="govuk-tag govuk-tag--orange" style="vertical-align: middle;">Suspended</strong>
+      {% elif tool.approval_status == "under_review" %}
+        <strong class="govuk-tag govuk-tag--yellow" style="vertical-align: middle;">Under Review</strong>
+      {% else %}
+        <strong class="govuk-tag govuk-tag--grey" style="vertical-align: middle;">Pending</strong>
+      {% endif %}
+    </h1>
+
+    {% if tool.description %}
+    <p class="govuk-body-l">{{ tool.description }}</p>
+    {% endif %}
+  </div>
+  {% if request.user.is_authenticated %}
+  <div class="govuk-grid-column-one-third" style="text-align: right; padding-top: 10px;">
+    <a href="/admin/catalogue/aitool/{{ tool.pk }}/change/" class="govuk-link govuk-body-s">Edit in admin &rarr;</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <!-- Summary -->
+    <h2 class="govuk-heading-m">Summary</h2>
+    <dl class="govuk-summary-list">
+      {% if tool.website %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Website</dt>
+        <dd class="govuk-summary-list__value"><a href="{{ tool.website }}" class="govuk-link" target="_blank" rel="noopener noreferrer">{{ tool.website }}</a></dd>
+      </div>
+      {% endif %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Vendor</dt>
+        <dd class="govuk-summary-list__value">{{ tool.vendor.name|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Type</dt>
+        <dd class="govuk-summary-list__value">{{ tool.get_product_type_display|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Deployment</dt>
+        <dd class="govuk-summary-list__value">{{ tool.get_deployment_type_display|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Licensing</dt>
+        <dd class="govuk-summary-list__value">{{ tool.get_licensing_model_display|default:"—" }}</dd>
+      </div>
+      {% if tool.data_residency %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Data residency</dt>
+        <dd class="govuk-summary-list__value">{{ tool.data_residency }}</dd>
+      </div>
+      {% endif %}
+      {% if tool.security_certification %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Security certification</dt>
+        <dd class="govuk-summary-list__value">{{ tool.security_certification }}</dd>
+      </div>
+      {% endif %}
+      {% if tool.last_assessment_date %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Last assessed</dt>
+        <dd class="govuk-summary-list__value">{{ tool.last_assessment_date }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+
+    <!-- External links -->
+    {% if tool.ardoq_link or tool.informatica_link or tool.contract_link %}
+    <h2 class="govuk-heading-m">External records</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% if tool.ardoq_link %}<li><a href="{{ tool.ardoq_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Ardoq architecture record</a></li>{% endif %}
+      {% if tool.informatica_link %}<li><a href="{{ tool.informatica_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Informatica data catalogue</a></li>{% endif %}
+      {% if tool.contract_link %}<li><a href="{{ tool.contract_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Contract (Atamis)</a></li>{% endif %}
+    </ul>
+    {% endif %}
+
+    <!-- AI Models -->
+    {% if tool.ai_models.all %}
+    <h2 class="govuk-heading-m">AI models used</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Model</th>
+          <th class="govuk-table__header">Developer</th>
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Explainability</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for model in tool.ai_models.all %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell"><a href="{% url 'model-detail' model.pk %}" class="govuk-link">{{ model }}</a></td>
+          <td class="govuk-table__cell">{{ model.developer.name|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ model.get_model_type_display }}</td>
+          <td class="govuk-table__cell">{{ model.get_explainability_level_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    <!-- Use Cases -->
+    {% if tool.use_cases.all %}
+    <h2 class="govuk-heading-m">Use cases</h2>
+    {% for uc in tool.use_cases.all %}
+    <div class="govuk-summary-card">
+      <div class="govuk-summary-card__title-wrapper">
+        <h3 class="govuk-summary-card__title">
+          <a href="{% url 'usecase-detail' uc.pk %}" class="govuk-link">{{ uc.title }}</a>
+        </h3>
+        {% if uc.risk_level == "critical" %}
+          <strong class="govuk-tag govuk-tag--red">{{ uc.get_risk_level_display }} risk</strong>
+        {% elif uc.risk_level == "high" %}
+          <strong class="govuk-tag govuk-tag--orange">{{ uc.get_risk_level_display }} risk</strong>
+        {% elif uc.risk_level == "medium" %}
+          <strong class="govuk-tag govuk-tag--yellow">{{ uc.get_risk_level_display }} risk</strong>
+        {% else %}
+          <strong class="govuk-tag govuk-tag--green">{{ uc.get_risk_level_display }} risk</strong>
+        {% endif %}
+      </div>
+      <div class="govuk-summary-card__content">
+        <dl class="govuk-summary-list">
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Owning department</dt>
+            <dd class="govuk-summary-list__value">{{ uc.owning_department.name|default:"—" }}</dd>
+          </div>
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Autonomy</dt>
+            <dd class="govuk-summary-list__value">{{ uc.get_autonomy_level_display }}</dd>
+          </div>
+          <div class="govuk-summary-list__row">
+            <dt class="govuk-summary-list__key">Public facing</dt>
+            <dd class="govuk-summary-list__value">{% if uc.is_public_facing %}Yes{% else %}No{% endif %}</dd>
+          </div>
+        </dl>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- Responsible owners -->
+    {% if tool.roles.all %}
+    <h2 class="govuk-heading-m">Responsible owners</h2>
+    <dl class="govuk-summary-list">
+      {% for role in tool.roles.all %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">{{ role.get_role_type_display }}</dt>
+        <dd class="govuk-summary-list__value">
+          {{ role.person_name }}
+          {% if role.email %}&nbsp;<a href="mailto:{{ role.email }}" class="govuk-link">{{ role.email }}</a>{% endif %}
+        </dd>
+      </div>
+      {% endfor %}
+    </dl>
+    {% endif %}
+
+    <!-- Attestations -->
+    {% if tool.attestations.all %}
+    <h2 class="govuk-heading-m">Assurance</h2>
+    <table class="govuk-table">
+      <thead class="govuk-table__head">
+        <tr class="govuk-table__row">
+          <th class="govuk-table__header">Type</th>
+          <th class="govuk-table__header">Status</th>
+          <th class="govuk-table__header">Date</th>
+          <th class="govuk-table__header">Expires</th>
+          <th class="govuk-table__header">Evidence</th>
+        </tr>
+      </thead>
+      <tbody class="govuk-table__body">
+        {% for a in tool.attestations.all %}
+        <tr class="govuk-table__row">
+          <td class="govuk-table__cell">{{ a.get_attestation_type_display }}</td>
+          <td class="govuk-table__cell">
+            {% if a.status == "completed" %}
+              <strong class="govuk-tag govuk-tag--green">{{ a.get_status_display }}</strong>
+            {% elif a.status == "expired" %}
+              <strong class="govuk-tag govuk-tag--red">{{ a.get_status_display }}</strong>
+            {% else %}
+              <strong class="govuk-tag govuk-tag--grey">{{ a.get_status_display }}</strong>
+            {% endif %}
+          </td>
+          <td class="govuk-table__cell">{{ a.attestation_date|default:"—" }}</td>
+          <td class="govuk-table__cell">{{ a.expiry_date|default:"—" }}</td>
+          <td class="govuk-table__cell">
+            {% if a.evidence_url %}
+            <a href="{{ a.evidence_url }}" class="govuk-link" target="_blank" rel="noopener noreferrer">View</a>
+            {% else %}—{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+
+    {% if tool.notes %}
+    <h2 class="govuk-heading-m">Notes</h2>
+    <p class="govuk-body">{{ tool.notes }}</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block title %}{{ ai_model }}{% endblock %}
+
+{% block content %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <a href="{% url 'model-list' %}" class="govuk-back-link">Back to AI models</a>
+    <h1 class="govuk-heading-xl">{{ ai_model }}</h1>
+  </div>
+  {% if request.user.is_authenticated %}
+  <div class="govuk-grid-column-one-third" style="text-align: right; padding-top: 10px;">
+    <a href="/admin/catalogue/aimodel/{{ ai_model.pk }}/change/" class="govuk-link govuk-body-s">Edit in admin &rarr;</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+
+    <h2 class="govuk-heading-m">Model details</h2>
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Developer</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.developer.name|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Version</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.version|default:"—" }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Model type</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.get_model_type_display }}</dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Explainability</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.get_explainability_level_display }}</dd>
+      </div>
+      {% if ai_model.parameter_count %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Parameter count</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.parameter_count|floatformat:"0" }}</dd>
+      </div>
+      {% endif %}
+      {% if ai_model.context_window_size %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Context window</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.context_window_size|floatformat:"0" }} tokens</dd>
+      </div>
+      {% endif %}
+      {% if ai_model.training_cutoff_date %}
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Training cutoff</dt>
+        <dd class="govuk-summary-list__value">{{ ai_model.training_cutoff_date }}</dd>
+      </div>
+      {% endif %}
+    </dl>
+
+    <h2 class="govuk-heading-m">Training data</h2>
+    <dl class="govuk-summary-list">
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Trained on PII</dt>
+        <dd class="govuk-summary-list__value">
+          {% if ai_model.training_includes_pii %}
+            <strong class="govuk-tag govuk-tag--yellow">Yes</strong>
+          {% else %}
+            No
+          {% endif %}
+        </dd>
+      </div>
+      <div class="govuk-summary-list__row">
+        <dt class="govuk-summary-list__key">Trained on government data</dt>
+        <dd class="govuk-summary-list__value">
+          {% if ai_model.training_includes_govt_data %}
+            <strong class="govuk-tag govuk-tag--yellow">Yes</strong>
+          {% else %}
+            No
+          {% endif %}
+        </dd>
+      </div>
+    </dl>
+
+    {% if ai_model.ardoq_link or ai_model.informatica_link or ai_model.contract_link %}
+    <h2 class="govuk-heading-m">External records</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% if ai_model.ardoq_link %}<li><a href="{{ ai_model.ardoq_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Ardoq architecture record</a></li>{% endif %}
+      {% if ai_model.informatica_link %}<li><a href="{{ ai_model.informatica_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Informatica data catalogue</a></li>{% endif %}
+      {% if ai_model.contract_link %}<li><a href="{{ ai_model.contract_link }}" class="govuk-link" target="_blank" rel="noopener noreferrer">Contract (Atamis)</a></li>{% endif %}
+    </ul>
+    {% endif %}
+
+    {% if ai_model.tools.all %}
+    <h2 class="govuk-heading-m">Used by</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% for tool in ai_model.tools.all %}
+      <li><a href="{% url 'tool-detail' tool.pk %}" class="govuk-link">{{ tool.name }}</a>{% if tool.vendor %} ({{ tool.vendor.name }}){% endif %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if ai_model.notes %}
+    <h2 class="govuk-heading-m">Notes</h2>
+    <p class="govuk-body">{{ ai_model.notes }}</p>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
