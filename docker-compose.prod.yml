@@ -1,0 +1,9 @@
+services:
+  web:
+    ports:
+      - "8000"
+    volumes:
+      - static_volume:/app/staticfiles
+  nginx:
+    profiles:
+      - local
