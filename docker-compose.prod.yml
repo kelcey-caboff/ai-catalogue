@@ -4,6 +4,10 @@ services:
       - "8000"
     volumes:
       - static_volume:/app/staticfiles
-  nginx:
-    profiles:
-      - local
+
+nginx:
+  image: alpine
+  entrypoint: ["tail", "-f", "/dev/null"]
+  ports: !reset []
+  volumes: !reset []
+  depends_on: !reset []
